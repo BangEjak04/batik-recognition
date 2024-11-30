@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drag and Drop File Upload</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+  
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+  <style>
+    :root {
+      font-family: "Manrope", serif;
+      font-optical-sizing: auto;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div x-data="fileUpload()" class="relative max-w-lg w-full p-6 bg-white shadow-md rounded-xl overflow-hidden">
+    <!-- Drop Area -->
+    <div
+      x-show="!file"
+      x-ref="dropArea"
+      @dragover.prevent="handleDragOver"
+      @dragleave.prevent="handleDragLeave"
+      @drop.prevent="handleDrop"
+      class="py-6 px-8 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center space-y-2"
+    >
+      <h5 class="text-sm font-bold">
+        Drop your image here, or
+        <button @click="$refs.fileInput.click()" class="text-blue-500">browse</button>
+      </h5>
+      <p class="text-xs font-medium text-gray-400">Supports: JPG, JPEG, PNG</p>
+      <input type="file" id="file-input" name="my_image" accept="image/*" @change="handleFile" x-ref="fileInput" class="hidden" />
+    </div>
+
+    <!-- Preview and Remove Button -->
+    <form id="uploadForm" x-show="file" class="relative" @submit.prevent="submitForm">
+      <img :src="file.url" alt="Preview" class="w-full object-cover rounded-md" />
+      <div class="absolute top-0 right-0">
+        <button type="button" @click="removeFile" class="mt-2 mr-2 rounded-full w-6 h-6 bg-white shadow text-sm hover:shadow-lg">
+          ✕
+        </button>
+      </div>
+      <div class="absolute inset-x-0 bottom-0 flex justify-center">
+        <button x-show="!prediction" type="submit" class="mb-2 py-2 px-3 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none">
+          Submit
+        </button>
+      </div>
+    </form>
+
+    <!-- Loading Area -->
+    <div x-show="loading" class="absolute inset-0 bg-white/80 flex flex-col justify-center items-center">
+      <div class="text-center py-6">
+        <div class="mb-4">
+          <div class="mx-auto w-8 h-8 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+        </div>
+        <p class="text-lg font-semibold text-gray-700">Predicting...</p>
+      </div>
+    </div>
+
+    <!-- Classification Result -->
+    <div class="mt-6 text-center" x-show="!loading && prediction">
+      <h4 class="text-lg font-bold">Classification Result</h4>
+      <h4 class="text-blue-600 mt-2">Result: <i x-text="prediction"></i></h4>
+    </div>
+  </div>
+
+  <script>
+    function fileUpload() {
+      return {
+        file: null,
+        prediction: '',
+        loading: false,
+
+        handleDragOver(event) {
+          this.$refs.dropArea.classList.add('border-blue-600', 'bg-blue-100');
+        },
+
+        handleDragLeave(event) {
+          this.$refs.dropArea.classList.remove('border-blue-600', 'bg-blue-100');
+        },
+
+        handleDrop(event) {
+          this.$refs.dropArea.classList.remove('border-blue-600', 'bg-blue-100');
+          const file = event.dataTransfer.files[0];
+          if (file) {
+            this.file = { file: file, url: URL.createObjectURL(file) };
+          }
+        },
+
+        handleFile(event) {
+          const file = event.target.files[0];
+          if (file) {
+            this.file = { file: file, url: URL.createObjectURL(file) };
+          }
+        },
+
+        removeFile() {
+          this.file = null;
+          this.prediction = '';
+          this.loading = false;
+        },
+
+        submitForm() {
+          if (!this.file) return;
+
+          const formData = new FormData();
+          formData.append('my_image', this.file.file);
+
+          this.loading = true;
+          $.ajax({
+            type: 'POST',
+            url: '/submit',
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: (response) => {
+              this.loading = false;
+              this.prediction = response.prediction;
+            },
+            error: () => {
+              alert('Error occurred during file upload.');
+              this.loading = false;
+            },
+          });
+        },
+      };
+    }
+  </script>
+</body>
+</html>

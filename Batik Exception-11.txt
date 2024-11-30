@@ -1,0 +1,1 @@
+{0: 'Batik Dayak', 1: 'Batik Geblek Renteng', 2: 'Batik Ikat Celup', 3: 'Batik Insang', 4: 'Batik Kawung', 5: 'Batik Lasem', 6: 'Batik Megamendung', 7: 'Batik Pala', 8: 'Batik Parang', 9: 'Batik Sekar Jagad', 10: 'Batik Tambal'}
