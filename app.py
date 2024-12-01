@@ -36,7 +36,6 @@ def get_output():
     img = request.files['my_image']
 
     # Simpan gambar di folder static
-    # img_path = os.path.join("static", img.filename)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"{timestamp}.{img.filename.split('.')[-1]}"
     img_path = os.path.join("static", filename)
